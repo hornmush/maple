@@ -23,6 +23,7 @@ const server=http.createServer(async(req,res)=>{
  if(req.method!=='GET'){res.writeHead(405);return res.end(JSON.stringify({error:'Method not allowed'}))}
  if(req.url==='/health'||req.url==='/'){return res.end(JSON.stringify({bridge:'running',mcpConnected:ready,tools:tools.map(t=>t.name),error:lastError}))}
  if(req.url==='/tools'){return res.end(JSON.stringify({mcpConnected:ready,tools,error:lastError}))}
+ if(req.url?.startsWith('/search?')){if(!ready){res.writeHead(503);return res.end(JSON.stringify({error:'MCP not connected'}))}try{const url=new URL(req.url,'http://localhost');const name=url.searchParams.get('tool')||'search_cash';const term=url.searchParams.get('q')||'';if(!['search_cash','search_items'].includes(name)||!term||term.length>80){res.writeHead(400);return res.end(JSON.stringify({error:'Invalid tool or query'}))}const spec=tools.find(t=>t.name===name);return res.end(JSON.stringify({tool:name,query:term,inputSchema:spec?.inputSchema,notice:'Search execution pending schema validation'}))}catch(e){res.writeHead(500);return res.end(JSON.stringify({error:String(e)}))}}
  res.writeHead(404);res.end(JSON.stringify({error:'Unknown endpoint'}));
 });
 server.listen(PORT,HOST,()=>{console.log('MVP LAB bridge: http://'+HOST+':'+PORT+'/health');connect()});
