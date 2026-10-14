@@ -31,9 +31,11 @@ const server=http.createServer(async(req,res)=>{
    const term=(url.searchParams.get('q')||'').trim();
    if(!['search_cash','search_items'].includes(name)||!term||term.length>80){res.writeHead(400);return res.end(JSON.stringify({error:'Invalid tool or query'}))}
    const sold=url.searchParams.get('sold')==='true';
-   const args={keyword:term,myWorldOnly:true,sold};
+   const world=url.searchParams.get('world')||'current';
+   if(!['current','all'].includes(world)){res.writeHead(400);return res.end(JSON.stringify({error:'world must be current or all'}))}
+   const args={keyword:term,myWorldOnly:world==='current',sold};
    const result=await client.callTool({name,arguments:args});
-   return res.end(JSON.stringify({tool:name,query:term,worldScope:'current-character',sold,result}));
+   return res.end(JSON.stringify({tool:name,query:term,worldScope:world==='current'?'current-character':'all-worlds',sold,result}));
   }catch(e){res.writeHead(500);return res.end(JSON.stringify({error:String(e)}))}
  }
  res.writeHead(404);res.end(JSON.stringify({error:'Unknown endpoint'}));
